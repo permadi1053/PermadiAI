@@ -15,8 +15,8 @@
 
 // Get Script Properties defined in Settings > Script Properties
 // You will have to save your Telegram 'bot_token' and OpenAI 'openai_api_key' here.
-var BOT_TOKEN = ('6149077124:AAFRYqI5VlCv_e5S2N8EUAQBUR671Qyt22g');// @BotFather in Telegram
-var OPENAI_API_KEY = ('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'); // https://beta.openai.com/account/api-keys
+var BOT_TOKEN = ('ganti_dengan_token_telegram');// @BotFather in Telegram
+var OPENAI_API_KEY = ('ganti_API_OpenAI'); // https://beta.openai.com/account/api-keys
 var adminID = "2015019477";
 var adminUsername = "permadi1053"; // Ganti dengan username admin bot Telegram Anda
 var adminLink = "https://t.me/" + adminUsername; // Link ke akun admin bot Telegram
@@ -24,11 +24,11 @@ var linkyoutube = "https://www.youtube.com/@sigitpermadi1053" //link youtube
 
 // Replace SPREADSHEET_ID with the ID of your Google Sheets document
 // To get this, go to your sheet URL and grab the id from here: https://docs.google.com/spreadsheets/d/{ID_HERE}/edit
-var SPREADSHEET_ID = "12LDf1tHkRF6x8QM0oyHYoqySMzhLYVgzCvl45ycNQLQ";
+var SPREADSHEET_ID = "ganti_dengan_ID_Spreadsheet";
 
 // Replace WEBHOOK_URL with the URL of your webhook handler
 // After deploying the script as web app, copy the URL and paste it here. It will look something like this: https://script.google.com/macros/s/XXX/exec"
-var WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzEaV_vwkYQHEvtdeuzm6RWiUKQ0mA9MalGkFpsUYNOT66uxr_dGQowmfg_kInL_D0o-A/exec";
+var WEBHOOK_URL = "webhook";
 
 var telegramUrl = "https://api.telegram.org/bot" + BOT_TOKEN;
 
