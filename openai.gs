@@ -1,0 +1,324 @@
+// A list of user IDs that are allowed to chat with the bot
+// to get your user id, message @userinfobot from your user in Telegram
+//var ALLOWED_USER_IDS = [
+  //2015019477,//sigit
+  //669413614,// permadi
+  //1006629815,// kiki
+  //994086943,//farel
+  //637730937,//restu
+  //1152936514,//nando
+  //1338453637,//pradit
+  //947551830,//bilal
+  //213467351, //fikri
+  //659465884 //wildan
+//];
+
+// Get Script Properties defined in Settings > Script Properties
+// You will have to save your Telegram 'bot_token' and OpenAI 'openai_api_key' here.
+var BOT_TOKEN = ('6149077124:AAFRYqI5VlCv_e5S2N8EUAQBUR671Qyt22g');// @BotFather in Telegram
+var OPENAI_API_KEY = ('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'); // https://beta.openai.com/account/api-keys
+var adminID = "2015019477";
+var adminUsername = "permadi1053"; // Ganti dengan username admin bot Telegram Anda
+var adminLink = "https://t.me/" + adminUsername; // Link ke akun admin bot Telegram
+var linkyoutube = "https://www.youtube.com/@sigitpermadi1053" //link youtube
+
+// Replace SPREADSHEET_ID with the ID of your Google Sheets document
+// To get this, go to your sheet URL and grab the id from here: https://docs.google.com/spreadsheets/d/{ID_HERE}/edit
+var SPREADSHEET_ID = "12LDf1tHkRF6x8QM0oyHYoqySMzhLYVgzCvl45ycNQLQ";
+
+// Replace WEBHOOK_URL with the URL of your webhook handler
+// After deploying the script as web app, copy the URL and paste it here. It will look something like this: https://script.google.com/macros/s/XXX/exec"
+var WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzEaV_vwkYQHEvtdeuzm6RWiUKQ0mA9MalGkFpsUYNOT66uxr_dGQowmfg_kInL_D0o-A/exec";
+
+var telegramUrl = "https://api.telegram.org/bot" + BOT_TOKEN;
+
+function getMe() {
+  var url = telegramUrl + "/getMe";
+  var response = UrlFetchApp.fetch(url);
+  Logger.log(response.getContentText());
+}
+
+function setWebhook() {
+  var url = telegramUrl + "/setWebhook?url=" + WEBHOOK_URL;
+  var response = UrlFetchApp.fetch(url);
+  Logger.log(response.getContentText());
+}
+
+function doPost(request) {
+  
+  try {
+    // Parse the request body
+    var postData = request.postData;
+    if (postData) {
+    var data = JSON.parse(postData.contents);
+    // your logic here
+    } else {
+    Logger.log("No post data found");
+    }
+    
+    var requestBody = JSON.parse(request.postData.contents);
+    
+    // Get the message from the request
+    var message = requestBody.message;
+    
+    // Get the user ID of the sender
+    var userId = message.from.id;
+
+    //get time
+    var time = new Date();
+
+    //get username
+    var userName = message.from.first_name + " " + message.from.last_name;
+
+    //get name
+    var nama = message.from.first_name;
+
+    //SpreadsheetApp.openById(SPREADSHEET_ID).getSheets()[0].appendRow([time,userId,userName]);
+
+    // Get the chat ID from the message
+    var chatId = message.chat.id;    
+
+    Logger.log(userId + "\t" + time + "\t" + userName);
+
+    // Check if the user ID is in the list of allowed user IDs (untuk sementara semua orang bisa mengakses)
+    //if (ALLOWED_USER_IDS.includes(userId) && (message.text.startsWith("/ask"))) {
+      //var text = message.text.substring(5).trim();
+    
+    //perintah agar semua orang dapat akses
+    if (message.text.startsWith("/start")) {
+      sendToTelegram("Halo! " + nama + " 👋\n"+
+      "Selamat datang di PermadiAI. \n" +
+      "Saya dapat membantu menjawab pertanyaan anda.\n\n" + 
+       "Cara menggunakan :\n" +
+       "🔶 Format :'/ask <spasi> perintah'\n" +
+       "🔶 contoh : '/ask apa kabar?'\n" +
+       "🔶 Oh iya, jika Anda menyukai jawaban PermadiAI, jangan lupa untuk mampir ke channel YouTube saya untuk mendapatkan konten menarik dan bermanfaat. Dukung saya dengan cara subscribe, like, dan share ya 😁! Terimakasih : "+ linkyoutube,chatId) ;
+      }
+    else if (message.text.startsWith("/ask")) {
+      var text = message.text.substring(5).trim();
+
+    //if (message.text.startsWith("/ask")) {
+      //var text = message.text.substring(5).trim();
+
+      var chatActionUrl = telegramUrl + "/sendChatAction?chat_id=" + chatId + "&action=typing";
+      UrlFetchApp.fetch(chatActionUrl);
+
+      // Write the question to the 'question' column in the Google Sheets document
+      //writeToSheet(text, "question");
+
+      // Send the question to the OpenAI API
+      // var response = 'Testing sample response from OpenAI...';
+      var response = sendToOpenAI(text);
+
+      // Write the answer to the 'answer' column in the Google Sheets document
+      //writeToSheet(response, "answer");
+      
+      SpreadsheetApp.openById(SPREADSHEET_ID).getSheets()[0].appendRow([time,userId,userName,text,response]);
+
+      // Send the answer back to the Telegram chat
+      sendToTelegram(response, chatId);
+    } 
+    else {
+      // Log a message indicating that the user is not allowed to chat
+      Logger.log("Pengguna dengan ID " + userId + "dengan nama" + userName + " tidak boleh menggunakan bot ini.");
+      sendToTelegram("Perintah tidak bisa di eksekusi, gunakan format:\n" +
+      "🔶 Format: '/ask <spasi> perintah'\n" +
+      "🔶 Contoh: '/ask apa kabar?'\n" +
+      "🔶 Oh iya, jika Anda menyukai jawaban PermadiAI, jangan lupa untuk mampir ke channel YouTube saya untuk mendapatkan konten menarik dan bermanfaat. Dukung saya dengan cara subscribe, like, dan share ya 😁! Terimakasih : "+ linkyoutube,chatId);
+      writeToSheet("Pengguna dengan ID " + userId + " dengan nama " + userName + " tidak boleh menggunakan bot ini.", "error");
+    }
+
+    
+  } catch (error) {
+    // Log the error message
+    Logger.log(error.message);
+    writeToSheet('Error in doPost(): '+error.message, "error");
+    // Return an error response
+    // return ContentService.createTextOutput(JSON.stringify({"success": false, "error": error.message})).setMime...
+  }
+}
+
+
+// Function to test OpenAI request in the debugger
+function testOpenAI(){
+  var message = 'Are you alive?';
+
+  var options = {
+    "method": "POST",
+    "headers": {
+      "Authorization": "Bearer " + OPENAI_API_KEY,
+      "Content-Type" : "application/json",
+    },
+    "payload": JSON.stringify({
+      "model": "text-davinci-003",
+      "prompt": message,
+      "max_tokens": 1000,
+      "temperature": 0.7,
+      "top_p": 1,
+      "frequency_penalty": 0,
+      "presence_penalty": 0
+    })
+  };  
+  var response = UrlFetchApp.fetch("https://api.openai.com/v1/completions", options);
+  Logger.log(response);
+}
+
+
+// Sends a message to the OpenAI API and returns the response
+function sendToOpenAI(message) {
+  try {
+    // Set up the request options
+    var options = {
+      "method": "POST",
+      "headers": {
+        "Authorization": "Bearer " + OPENAI_API_KEY,
+        "Content-Type" : "application/json",
+      },
+      "payload": JSON.stringify({
+        "model": "text-davinci-003",
+        "prompt": message,
+        "max_tokens": 1000,
+        "temperature": 0.7,
+        "top_p": 1,
+        "frequency_penalty": 0,
+        "presence_penalty": 0
+      })
+    }; 
+
+    // Send the request and parse the response
+    var response = JSON.parse(UrlFetchApp.fetch("https://api.openai.com/v1/completions", options));
+    
+    // Initialize the response text
+    var responseText = "";
+
+    // Loop through the choices array
+    for (var i = 0; i < response.choices.length; i++) {
+      // Get the text of the current choice
+      var choiceText = response.choices[i].text;
+
+      // Add the text to the response text
+      responseText += choiceText;
+    }
+
+    // Return the response text
+    return responseText;
+  } catch (error) {
+    // Log the error message
+    Logger.log(error.message);
+  
+    // Return an error message
+    return "An error occurred while sending the request to the OpenAI API. Error: "+JSON.stringify(error);
+  }
+}
+
+
+// Sends a message to the specified Telegram chat (edit)
+//function sendToTelegram(message, chatId) {
+  //var url = telegramUrl + "/sendMessage?chat_id=" + chatId  + "&text=" + encodeURIComponent(message);
+  //var response = UrlFetchApp.fetch(url);
+  //Logger.log(response.getContentText());  
+//}
+
+function sendToTelegram(text, chatId) {
+  // Maximal length of a message is 4096 characters
+  const maxLength = 4096;
+
+  // Split the message into chunks that are not longer than maxLength
+  const chunks = [];
+  var currentChunk = '';
+  var lines = text.split(/\r?\n/);
+
+  lines.forEach((line, i) => {
+    const words = line.split(' ');
+    const lineLength = currentChunk.length + line.length + 1; // +1 to account for the newline character
+    if (lineLength <= maxLength) {
+      currentChunk += '\n' + line;
+    } else {
+      chunks.push(currentChunk);
+      currentChunk = line;
+    }
+
+    // Send the last chunk if we have reached the end of the lines
+    if (i === lines.length - 1) {
+      chunks.push(currentChunk);
+    }
+  });
+
+  // Send each chunk as a separate message
+  chunks.forEach((chunk, i) => {
+    const params = {
+      method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify({
+        text: i === 0 ? chunk : `...${chunk}`,
+        chat_id: String(chatId),
+      }),
+    };
+
+    UrlFetchApp.fetch(telegramUrl + '/sendMessage', params);
+  });
+}
+
+
+function splitText(text, maxLength) {
+  var result = [];
+  var words = text.split(' ');
+  var currentLine = words[0];
+  for (var i = 1; i < words.length; i++) {
+    var word = words[i];
+    if ((currentLine + ' ' + word).length <= maxLength) {
+      currentLine += ' ' + word;
+    } else {
+      result.push(currentLine);
+      currentLine = word;
+    }
+  }
+  result.push(currentLine);
+  return result;
+}
+
+
+// Writes a value to the specified column in the Google Sheets document
+function writeToSheet(value, column) {
+  // Get the Google Sheets document
+  var sheets = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+  // Get the first sheet in the document
+  var sheet = sheets.getSheets()[0];
+
+  // Get the next empty row in the sheet
+  var lastRow = sheet.getLastRow();
+
+  if(column == 'answer'){
+    var nextRow = lastRow;
+  }
+  else {  
+    var nextRow = lastRow + 1;
+  }
+
+  // Write the value
+  // Write the value to the specified column in the sheet
+  sheet.getRange(nextRow, getColumnNumber(column)).setValue(value);
+}
+
+// Returns the number of the column with the specified name
+function getColumnNumber(columnName) {
+  // Get the Google Sheets document
+  var sheets = SpreadsheetApp.openById(SPREADSHEET_ID);
+  // Get the first sheet in the document
+  var sheet = sheets.getSheets()[0];
+
+  // Get the range of the sheet
+  var range = sheet.getRange(1, 1, 1, sheet.getLastColumn());
+
+  // Get the values of the range
+  var values = range.getValues();
+
+  // Loop through the values and return the column number when the column name is found
+  for (var i = 0; i < values[0].length; i++) {
+    if (values[0][i] == columnName) {
+      return i + 1;
+    }
+  }
+}
+
